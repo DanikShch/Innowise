@@ -105,7 +105,7 @@ public class Factory implements Runnable {
     private void produceParts() {
         lock.lock();
         try {
-            for (int i = 0; i < Constants.PARTS_PER_DAY; i++) {
+            for (int i = 0; i <= random.nextInt(Constants.PARTS_PER_DAY); i++) {
                 storage.add(RobotPart.values()[random.nextInt(RobotPart.values().length)]);
             }
         } finally {
