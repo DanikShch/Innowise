@@ -1,4 +1,4 @@
-package innowise.model;
+package com.innowise.skynet.model;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

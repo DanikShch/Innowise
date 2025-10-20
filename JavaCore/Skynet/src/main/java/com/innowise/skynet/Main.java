@@ -1,7 +1,7 @@
-package innowise;
+package com.innowise.skynet;
 
-import innowise.model.Faction;
-import innowise.model.Factory;
+import com.innowise.skynet.model.Faction;
+import com.innowise.skynet.model.Factory;
 
 
 public class Main {

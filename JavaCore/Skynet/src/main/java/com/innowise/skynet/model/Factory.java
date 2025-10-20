@@ -1,4 +1,4 @@
-package innowise.model;
+package com.innowise.skynet.model;
 
 import java.util.LinkedList;
 import java.util.List;

@@ -1,4 +1,4 @@
-package innowise;
+package com.innowise.customlinkedlist;
 
 import java.util.NoSuchElementException;
 
@@ -11,10 +11,12 @@ public class CustomLinkedList<T> {
     private static class Node<T> {
         T data;
         Node<T> next;
+        Node<T> prev;
 
         public Node(T data) {
             this.data = data;
             this.next = null;
+            this.prev = null;
         }
     }
 
@@ -35,6 +37,7 @@ public class CustomLinkedList<T> {
             tail = newNode;
         } else {
             newNode.next = head;
+            head.prev = newNode;
             head = newNode;
         }
         size++;
@@ -47,12 +50,13 @@ public class CustomLinkedList<T> {
             tail = newNode;
         } else {
             tail.next = newNode;
+            newNode.prev = tail;
             tail = newNode;
         }
         size++;
     }
 
-    public void add(int index, T element) {
+    public void add(int index, T element) {//todo
         if (index < 0 || index > size) {
             throw new IndexOutOfBoundsException("Index out of bounds");
         }
@@ -61,13 +65,12 @@ public class CustomLinkedList<T> {
         } else if (index == size) {
             addLast(element);
         } else {
-            Node<T> current = head;
-            for (int i = 0; i < index - 1; i++) {
-                current = current.next;
-            }
+            Node<T> current = getNode(index);
             Node<T> newNode = new Node<>(element);
-            newNode.next = current.next;
-            current.next = newNode;
+            newNode.prev = current.prev;
+            newNode.next = current;
+            current.prev.next = newNode;
+            current.prev = newNode;
             size++;
         }
     }
@@ -86,15 +89,27 @@ public class CustomLinkedList<T> {
         return tail.data;
     }
 
-    public T get(int index) {
+    private Node<T> getNode(int index) {
         if (index < 0 || index >= size) {
             throw new IndexOutOfBoundsException("Index out of bounds");
         }
-        Node<T> current = head;
-        for (int i = 0; i < index; i++) {
-            current = current.next;
+        if (index < size / 2) {
+            Node<T> current = head;
+            for (int i = 0; i < index; i++) {
+                current = current.next;
+            }
+            return current;
+        } else {
+            Node<T> current = tail;
+            for (int i = size - 1; i > index; i--) {
+                current = current.prev;
+            }
+            return current;
         }
-        return current.data;
+    }
+
+    public T get(int index) {
+        return getNode(index).data;
     }
 
     public T removeFirst() {
@@ -102,9 +117,12 @@ public class CustomLinkedList<T> {
             throw new NoSuchElementException("List is empty");
         }
         T data = head.data;
-        head = head.next;
-        if (head == null) {
+        if (head == tail) {
+            head = null;
             tail = null;
+        } else {
+            head = head.next;
+            head.prev = null;
         }
         size--;
         return data;
@@ -119,12 +137,8 @@ public class CustomLinkedList<T> {
             tail = null;
             head = null;
         } else {
-            Node<T> current = head;
-            while (current.next != tail) {
-                current = current.next;
-            }
-            current.next = null;
-            tail = current;
+            tail = tail.prev;
+            tail.next = null;
         }
         size--;
         return data;
@@ -136,16 +150,13 @@ public class CustomLinkedList<T> {
         }
         if (index == 0) {
             return removeFirst();
+        } else if (index == size - 1) {
+            return removeLast();
         } else {
-            Node<T> current = head;
-            for (int i = 0; i < index - 1; i++) {
-                current = current.next;
-            }
-            T data = current.next.data;
-            if (current.next == tail) {
-                tail = current;
-            }
-            current.next = current.next.next;
+            Node<T> nodeToRemove = getNode(index);
+            T data = nodeToRemove.data;
+            nodeToRemove.prev.next = nodeToRemove.next;
+            nodeToRemove.next.prev = nodeToRemove.prev;
             size--;
             return data;
         }

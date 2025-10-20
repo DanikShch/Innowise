@@ -1,4 +1,4 @@
-package innowise.model;
+package com.innowise.skynet.model;
 
 public interface Constants {
     int TOTAL_DAYS = 100;

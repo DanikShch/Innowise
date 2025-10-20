@@ -1,4 +1,4 @@
-package innowise;
+package com.innowise.customlinkedlist;
 
 
 import org.junit.jupiter.api.BeforeEach;
