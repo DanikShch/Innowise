@@ -4,11 +4,13 @@ import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.time.LocalDate;
 
 @Data
+@AllArgsConstructor
 public class CardInfoRequestDto {
     @Pattern(regexp = "^[0-9]{13,19}$", message = "Card number must be 13-19 digits")
     @NotBlank(message = "Number is required")
