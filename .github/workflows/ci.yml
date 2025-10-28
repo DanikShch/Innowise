@@ -46,12 +46,12 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('UserService/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
 
-      # 5. Build + тесты (тесты пропущены)
+      # 5. Build + тесты
       - name: Build project
         run: mvn -B -f UserService/pom.xml clean install -DskipTests
 
-      - name: Run Unit Tests with coverage
-        run: mvn -B -f UserService/pom.xml test jacoco:report -Dgroups=unit
+      - name: Run Unit Tests with Coverage
+        run: mvn -B -f UserService/pom.xml clean test -Dgroups=unit -Pcoverage
 
       - name: Run Integration Tests
         run: mvn -B -f UserService/pom.xml verify -Dgroups=integration
@@ -61,7 +61,7 @@ jobs:
       - name: SonarQube analysis
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: mvn -B -f UserService/pom.xml org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=DanikShch_Innowise -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${{ secrets.SONAR_TOKEN }} -Dsonar.java.coveragePlugin=jacoco -Dsonar.coverage.jacoco.xmlReportPaths=UserService/target/site/jacoco/jacoco.xml
+        run: mvn -B -f UserService/pom.xml org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=DanikShch_Innowise -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${{ secrets.SONAR_TOKEN }} -Pcoverage
 
 
       # 7. Логинимся в Docker Hub
