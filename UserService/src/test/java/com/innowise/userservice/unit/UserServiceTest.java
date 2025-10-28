@@ -8,6 +8,7 @@ import com.innowise.userservice.mapper.UserMapper;
 import com.innowise.userservice.model.User;
 import com.innowise.userservice.repository.UserRepository;
 import com.innowise.userservice.service.impl.UserServiceImpl;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -26,6 +27,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@Tag("unit")
 class UserServiceTest {
 
     @Mock

@@ -47,8 +47,15 @@ jobs:
           restore-keys: ${{ runner.os }}-m2
 
       # 5. Build + тесты (тесты пропущены)
-      - name: Build and test
-        run: mvn -B -f UserService/pom.xml clean verify
+      - name: Build project
+        run: mvn -B -f UserService/pom.xml clean install -DskipTests
+
+      - name: Run Unit Tests
+        run: mvn -B -f UserService/pom.xml test -Dgroups=unit
+
+      - name: Run Integration Tests
+        run: mvn -B -f UserService/pom.xml verify -Dgroups=integration
+
 
       # 6. SonarQube анализ
       - name: SonarQube analysis
