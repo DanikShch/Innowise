@@ -12,7 +12,7 @@ import java.time.LocalDate;
 @Data
 @AllArgsConstructor
 public class CardInfoRequestDto {
-    @Pattern(regexp = "^[0-9]{13,19}$", message = "Card number must be 13-19 digits")
+    @Pattern(regexp = "^\\d{13,19}$", message = "Card number must be 13-19 digits")
     @NotBlank(message = "Number is required")
     private String number;
 

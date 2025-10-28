@@ -48,7 +48,7 @@ jobs:
 
       # 5. Build + тесты (тесты пропущены)
       - name: Build and test
-        run: mvn -B -f UserService/pom.xml clean verify -DskipTests
+        run: mvn -B -f UserService/pom.xml clean verify
 
       # 6. SonarQube анализ
       - name: SonarQube analysis
