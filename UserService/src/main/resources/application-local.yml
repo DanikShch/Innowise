@@ -1,0 +1,16 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/user_service_db
+    username: postgres
+    password: 12345
+  jpa:
+    show-sql: true
+  liquibase:
+    enabled: true
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  config:
+    activate:
+      on-profile: local
