@@ -12,6 +12,7 @@ public interface CardInfoMapper {
     @Mapping(source = "userId", target = "user.id")
     CardInfo toEntity(CardInfoRequestDto dto);
 
+    @Mapping(source = "user.id", target = "userId")
     CardInfoResponseDto toDto(CardInfo entity);
 
     void updateEntityFromDto(CardInfoRequestDto dto, @MappingTarget CardInfo entity);

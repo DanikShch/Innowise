@@ -1,12 +1,15 @@
 package com.innowise.userservice.service.impl;
 
 import com.innowise.userservice.dto.request.UserRequestDto;
+import com.innowise.userservice.dto.response.CardInfoResponseDto;
 import com.innowise.userservice.dto.response.UserResponseDto;
+import com.innowise.userservice.dto.response.UserWithCardsResponseDto;
 import com.innowise.userservice.exception.EmailAlreadyExistsException;
 import com.innowise.userservice.exception.UserNotFoundException;
 import com.innowise.userservice.mapper.UserMapper;
 import com.innowise.userservice.model.User;
 import com.innowise.userservice.repository.UserRepository;
+import com.innowise.userservice.service.CardInfoService;
 import com.innowise.userservice.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
@@ -16,10 +19,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
+    private final CardInfoService cardInfoService;
     private final UserRepository userRepository;
     private final UserMapper userMapper;
 
@@ -37,10 +43,13 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     @Cacheable(value = "users", key = "#id")
-    public UserResponseDto getUserById(Long id) {
+    public UserWithCardsResponseDto getUserById(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
-        return userMapper.toDto(user);
+        List<CardInfoResponseDto> cards = cardInfoService.getCardsByUserId(id);
+        UserWithCardsResponseDto dto = userMapper.toDtoWithCards(user);
+        dto.setCards(cards);
+        return dto;
     }
 
     @Override

@@ -2,6 +2,7 @@ package com.innowise.userservice.integration;
 
 import com.innowise.userservice.dto.request.UserRequestDto;
 import com.innowise.userservice.dto.response.UserResponseDto;
+import com.innowise.userservice.dto.response.UserWithCardsResponseDto;
 import com.innowise.userservice.exception.EmailAlreadyExistsException;
 import com.innowise.userservice.service.UserService;
 import org.junit.jupiter.api.Test;
@@ -29,7 +30,7 @@ class UserServiceIntegrationTest extends BaseIntegrationTest {
         assertNotNull(created.getId());
         assertEquals("Alice", created.getName());
 
-        UserResponseDto found = userService.getUserById(created.getId());
+        UserWithCardsResponseDto found = userService.getUserById(created.getId());
         assertEquals("alice@example.com", found.getEmail());
     }
 

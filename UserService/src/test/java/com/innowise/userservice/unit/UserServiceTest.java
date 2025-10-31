@@ -2,11 +2,13 @@ package com.innowise.userservice.unit;
 
 import com.innowise.userservice.dto.request.UserRequestDto;
 import com.innowise.userservice.dto.response.UserResponseDto;
+import com.innowise.userservice.dto.response.UserWithCardsResponseDto;
 import com.innowise.userservice.exception.EmailAlreadyExistsException;
 import com.innowise.userservice.exception.UserNotFoundException;
 import com.innowise.userservice.mapper.UserMapper;
 import com.innowise.userservice.model.User;
 import com.innowise.userservice.repository.UserRepository;
+import com.innowise.userservice.service.CardInfoService;
 import com.innowise.userservice.service.impl.UserServiceImpl;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -38,6 +40,9 @@ class UserServiceTest {
 
     @InjectMocks
     private UserServiceImpl userService;
+
+    @Mock
+    private CardInfoService cardInfoService;
 
     private final UserRequestDto userRequestDto = new UserRequestDto(
             "John", "Doe", LocalDate.of(1990, 1, 1), "john@example.com"
@@ -75,10 +80,13 @@ class UserServiceTest {
 
     @Test
     void getUserById_Success() {
+        UserWithCardsResponseDto userWithCardsDto = new UserWithCardsResponseDto(
+                1L, "John", "Doe", LocalDate.now(), "john@test.com", List.of()
+        );
         when(userRepository.findById(1L)).thenReturn(Optional.of(userEntity));
-        when(userMapper.toDto(userEntity)).thenReturn(userResponseDto);
-
-        UserResponseDto result = userService.getUserById(1L);
+        when(userMapper.toDtoWithCards(userEntity)).thenReturn(userWithCardsDto);
+        when(cardInfoService.getCardsByUserId(1L)).thenReturn(List.of());
+        UserWithCardsResponseDto result = userService.getUserById(1L);
 
         assertNotNull(result);
         assertEquals(1L, result.getId());
