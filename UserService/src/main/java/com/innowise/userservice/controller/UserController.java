@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -32,20 +33,19 @@ public class UserController {
     }
 
     @GetMapping
-    public ResponseEntity<?> getUsers(
-            @RequestParam(required = false) String email,
+    public ResponseEntity<?> getAllUsers(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sort) {
-        if (email != null) {
-            UserResponseDto user = userService.getUserByEmail(email);
-            return ResponseEntity.ok(user);
-        } else {
-            Page<UserResponseDto> users = userService.getAllUsers(PageRequest.of(page, size, Sort.by(sort)));
-            return ResponseEntity.ok(users.getContent());
-        }
+        Page<UserResponseDto> users = userService.getAllUsers(PageRequest.of(page, size, Sort.by(sort)));
+        return ResponseEntity.ok(users.getContent());
     }
 
+    @GetMapping(params = "email")
+    public ResponseEntity<UserResponseDto> getUserByEmail(@RequestParam String email) {
+        UserResponseDto user = userService.getUserByEmail(email);
+        return ResponseEntity.ok(user);
+    }
 
     @PutMapping("/{id}")
     public ResponseEntity<UserResponseDto> updateUser(@PathVariable Long id, @Valid @RequestBody UserRequestDto userRequestDto) {
