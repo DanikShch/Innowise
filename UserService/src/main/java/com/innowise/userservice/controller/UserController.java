@@ -58,4 +58,16 @@ public class UserController {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/me")
+    public ResponseEntity<UserWithCardsResponseDto> getCurrentUser() {
+        UserWithCardsResponseDto user = userService.getCurrentUser();
+        return ResponseEntity.ok(user);
+    }
+
+    @PutMapping("/me")
+    public ResponseEntity<UserResponseDto> updateCurrentUser(@Valid @RequestBody UserRequestDto userRequestDto) {
+        UserResponseDto userResponseDto = userService.updateCurrentUser(userRequestDto);
+        return ResponseEntity.ok(userResponseDto);
+    }
 }

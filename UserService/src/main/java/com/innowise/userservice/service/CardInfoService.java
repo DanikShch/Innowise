@@ -19,4 +19,6 @@ public interface CardInfoService {
     void deleteCard(Long id);
 
     List<CardInfoResponseDto> getCardsByUserId(Long userId);
+
+    List<CardInfoResponseDto> getCurrentUserCards();
 }

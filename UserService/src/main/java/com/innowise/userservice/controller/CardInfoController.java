@@ -59,4 +59,10 @@ public class CardInfoController {
         cardInfoService.deleteCard(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/my-cards")
+    public ResponseEntity<List<CardInfoResponseDto>> getMyCards() {
+        List<CardInfoResponseDto> cards = cardInfoService.getCurrentUserCards();
+        return ResponseEntity.ok(cards);
+    }
 }

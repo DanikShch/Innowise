@@ -1,3 +1,18 @@
 spring:
   application:
     name: AuthenticationService
+  datasource:
+    url: jdbc:postgresql://localhost:5432/auth_service_db
+    username: postgres
+    password: 12345
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    enabled: true
+
+server:
+  port: 8081
+
+jwt:
+  secret: your-super-secret-key-with-minimum-32-chars-for-hs256-algorithm
+  access-token-expiration: 900000
+  refresh-token-expiration: 2592000000

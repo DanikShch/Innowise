@@ -31,6 +31,7 @@
         <org.mapstruct.version>1.5.5.Final</org.mapstruct.version>
         <sonar.organization>danikshch1</sonar.organization>
         <sonar.inclusions>com/innowise/userservice/service/impl/**</sonar.inclusions>
+        <spring-cloud.version>2025.0.0</spring-cloud.version>
     </properties>
     <dependencies>
         <dependency>
@@ -110,7 +111,14 @@
             <artifactId>jedis</artifactId>
             <scope>test</scope>
         </dependency>
-
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-openfeign</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
@@ -148,6 +156,18 @@
         </plugins>
     </build>
 
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <profiles>
     <profile>
         <id>coverage</id>
@@ -173,9 +193,6 @@
                             <configuration>
                                 <outputDirectory>${project.build.directory}/site/jacoco</outputDirectory>
                                 <dataFile>${project.build.directory}/jacoco.exec</dataFile>
-                                <xml>true</xml>
-                                <csv>false</csv>
-                                <html>false</html>
                             </configuration>
                         </execution>
                     </executions>
