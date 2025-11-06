@@ -1,0 +1,15 @@
+spring:
+  config:
+    activate:
+      on-profile: docker
+  datasource:
+    url: ${DOCKER_POSTGRES_URL}
+    username: ${DOCKER_POSTGRES_USER}
+    password: ${DOCKER_POSTGRES_PASSWORD}
+  jpa:
+    show-sql: false
+  liquibase:
+    enabled: true
+
+server:
+  port: 8081
