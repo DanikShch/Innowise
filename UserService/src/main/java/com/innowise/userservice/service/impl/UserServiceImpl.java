@@ -34,10 +34,12 @@ public class UserServiceImpl implements UserService {
     @Transactional
     @CacheEvict(value = "users", allEntries = true)
     public UserResponseDto createUser(UserRequestDto userRequestDto) {
-        if (userRepository.existsByEmail(userRequestDto.getEmail())) {
-            throw new EmailAlreadyExistsException(userRequestDto.getEmail());
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        if (userRepository.existsByEmail(email)) {
+            throw new EmailAlreadyExistsException(email);
         }
         User user = userMapper.toEntity(userRequestDto);
+        user.setEmail(email);
         return userMapper.toDto(userRepository.save(user));
     }
 
@@ -76,9 +78,6 @@ public class UserServiceImpl implements UserService {
     public UserResponseDto updateUser(Long id, UserRequestDto userRequestDto) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
-        if (!user.getEmail().equals(userRequestDto.getEmail()) && userRepository.existsByEmail(userRequestDto.getEmail())) {
-            throw new EmailAlreadyExistsException(userRequestDto.getEmail());
-        }
         userMapper.updateEntityFromDto(userRequestDto, user);
         return userMapper.toDto(userRepository.save(user));
     }

@@ -22,7 +22,4 @@ public class UserRequestDto {
     @NotNull(message = "Birth date is required")
     private LocalDate birthDate;
 
-    @Email(message = "Invalid email")
-    @NotBlank(message = "Email is required")
-    private String email;
 }

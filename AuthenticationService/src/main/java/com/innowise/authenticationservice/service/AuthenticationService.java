@@ -1,4 +1,4 @@
-package com.innowise.authenticationservice.dto.service;
+package com.innowise.authenticationservice.service;
 
 import com.innowise.authenticationservice.dto.request.LoginRequest;
 import com.innowise.authenticationservice.dto.request.RefreshTokenRequest;

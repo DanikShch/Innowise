@@ -5,7 +5,7 @@ import com.innowise.authenticationservice.dto.request.RefreshTokenRequest;
 import com.innowise.authenticationservice.dto.request.RegisterRequest;
 import com.innowise.authenticationservice.dto.response.AuthResponse;
 import com.innowise.authenticationservice.dto.response.UserInfoResponse;
-import com.innowise.authenticationservice.dto.service.AuthenticationService;
+import com.innowise.authenticationservice.service.AuthenticationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

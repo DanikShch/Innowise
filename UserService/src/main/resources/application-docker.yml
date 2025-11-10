@@ -14,3 +14,7 @@ spring:
   config:
     activate:
       on-profile: docker
+
+app:
+  auth-service:
+    url: ${DOCKER_AUTH_SERVICE_URL}
