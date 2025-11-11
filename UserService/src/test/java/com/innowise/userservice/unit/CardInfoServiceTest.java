@@ -16,11 +16,15 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -47,7 +51,7 @@ class CardInfoServiceTest {
 
     private final User userEntity = User.builder().id(1L).name("John").build();
     private final CardInfoRequestDto cardRequestDto = new CardInfoRequestDto(
-            "1234567890123456", "JOHN DOE", LocalDate.of(2027, 12, 31), 1L
+            "1234567890123456", "JOHN DOE", LocalDate.of(2027, 12, 31)
     );
     private final CardInfo cardEntity = CardInfo.builder()
             .id(1L).number("1234567890123456").holder("JOHN DOE")
@@ -58,8 +62,15 @@ class CardInfoServiceTest {
 
     @Test
     void createCard_Success() {
+        Authentication auth = mock(Authentication.class);
+        when(auth.getName()).thenReturn("john@example.com");
+
+        SecurityContext securityContext = mock(SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(auth);
+        SecurityContextHolder.setContext(securityContext);
+
+        when(userRepository.findByEmail("john@example.com")).thenReturn(Optional.of(userEntity));
         when(cardInfoRepository.existsByNumber("1234567890123456")).thenReturn(false);
-        when(userRepository.findById(1L)).thenReturn(Optional.of(userEntity));
         when(cardInfoMapper.toEntity(cardRequestDto)).thenReturn(cardEntity);
         when(cardInfoRepository.save(cardEntity)).thenReturn(cardEntity);
         when(cardInfoMapper.toDto(cardEntity)).thenReturn(cardResponseDto);
@@ -80,8 +91,15 @@ class CardInfoServiceTest {
 
     @Test
     void createCard_UserNotFound() {
-        when(cardInfoRepository.existsByNumber("1234567890123456")).thenReturn(false);
-        when(userRepository.findById(1L)).thenReturn(Optional.empty());
+        Authentication auth = mock(Authentication.class);
+        when(auth.getName()).thenReturn("john@example.com");
+
+        SecurityContext securityContext = mock(SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(auth);
+
+        SecurityContextHolder.setContext(securityContext);
+
+        when(userRepository.findByEmail("john@example.com")).thenReturn(Optional.empty());
 
         assertThrows(UserNotFoundException.class, () -> cardInfoService.createCard(cardRequestDto));
     }
@@ -139,26 +157,31 @@ class CardInfoServiceTest {
     @Test
     void updateCard_Success() {
         CardInfoRequestDto updateDto = new CardInfoRequestDto(
-                "9999999999999999", "JOHN SMITH", LocalDate.of(2028, 12, 31), 2L
-        );
-        User newUser = User.builder().id(2L).name("Jane").build();
-        CardInfo updatedCard = CardInfo.builder()
-                .id(1L).number("9999999999999999").holder("JOHN SMITH")
-                .expirationDate(LocalDate.of(2028, 12, 31)).user(newUser).build();
-        CardInfoResponseDto updatedResponse = new CardInfoResponseDto(
-                1L, "9999999999999999", "JOHN SMITH", LocalDate.of(2028, 12, 31), 2L
+                "9999999999999999", "JOHN SMITH", LocalDate.of(2028, 12, 31)
         );
 
-        when(cardInfoRepository.findById(1L)).thenReturn(Optional.of(cardEntity));
-        when(cardInfoRepository.existsByNumber("9999999999999999")).thenReturn(false);
-        when(userRepository.existsById(2L)).thenReturn(true);
-        when(cardInfoRepository.save(any(CardInfo.class))).thenReturn(updatedCard);
-        when(cardInfoMapper.toDto(updatedCard)).thenReturn(updatedResponse);
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.getName()).thenReturn("john@example.com");
 
-        CardInfoResponseDto result = cardInfoService.updateCard(1L, updateDto);
+        SecurityContext securityContext = mock(SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
 
-        assertNotNull(result);
-        assertEquals("JOHN SMITH", result.getHolder());
+        try (MockedStatic<SecurityContextHolder> mockedSecurity = mockStatic(SecurityContextHolder.class)) {
+            mockedSecurity.when(SecurityContextHolder::getContext).thenReturn(securityContext);
+            when(userRepository.findByEmail("john@example.com")).thenReturn(Optional.of(userEntity));
+
+            when(cardInfoRepository.findById(1L)).thenReturn(Optional.of(cardEntity));
+            when(cardInfoRepository.existsByNumber("9999999999999999")).thenReturn(false);
+            when(cardInfoRepository.save(any(CardInfo.class))).thenReturn(cardEntity);
+            when(cardInfoMapper.toDto(any(CardInfo.class))).thenReturn(new CardInfoResponseDto(
+                    1L, "9999999999999999", "JOHN SMITH", LocalDate.of(2028, 12, 31), 1L
+            ));
+
+            CardInfoResponseDto result = cardInfoService.updateCard(1L, updateDto);
+
+            assertNotNull(result);
+            assertEquals("JOHN SMITH", result.getHolder());
+        }
     }
 
     @Test
@@ -171,7 +194,7 @@ class CardInfoServiceTest {
     @Test
     void updateCard_NumberExists() {
         CardInfoRequestDto updateDto = new CardInfoRequestDto(
-                "9999999999999999", "JOHN DOE", LocalDate.of(2027, 12, 31), 1L
+                "9999999999999999", "JOHN DOE", LocalDate.of(2027, 12, 31)
         );
 
         when(cardInfoRepository.findById(1L)).thenReturn(Optional.of(cardEntity));
@@ -183,29 +206,51 @@ class CardInfoServiceTest {
     @Test
     void updateCard_UserNotFound() {
         CardInfoRequestDto updateDto = new CardInfoRequestDto(
-                "9999999999999999", "JOHN DOE", LocalDate.of(2027, 12, 31), 2L
+                "9999999999999999", "JOHN DOE", LocalDate.of(2027, 12, 31)
         );
 
-        when(cardInfoRepository.findById(1L)).thenReturn(Optional.of(cardEntity));
-        when(cardInfoRepository.existsByNumber("9999999999999999")).thenReturn(false);
-        when(userRepository.existsById(2L)).thenReturn(false);
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.getName()).thenReturn("john@example.com");
 
-        assertThrows(UserNotFoundException.class, () -> cardInfoService.updateCard(1L, updateDto));
+        SecurityContext securityContext = mock(SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+
+        try (MockedStatic<SecurityContextHolder> mockedSecurity = mockStatic(SecurityContextHolder.class)) {
+            mockedSecurity.when(SecurityContextHolder::getContext).thenReturn(securityContext);
+
+            when(cardInfoRepository.findById(1L)).thenReturn(Optional.of(cardEntity));
+            when(cardInfoRepository.existsByNumber("9999999999999999")).thenReturn(false);
+            when(userRepository.findByEmail("john@example.com")).thenReturn(Optional.empty());
+
+            assertThrows(UserNotFoundException.class, () -> cardInfoService.updateCard(1L, updateDto));
+        }
     }
+
 
     @Test
     void deleteCard_Success() {
-        when(cardInfoRepository.existsById(1L)).thenReturn(true);
+        when(cardInfoRepository.findById(1L)).thenReturn(Optional.of(cardEntity));
 
-        cardInfoService.deleteCard(1L);
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.getName()).thenReturn("john@example.com");
 
+        SecurityContext securityContext = mock(SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+
+        try (MockedStatic<SecurityContextHolder> mockedSecurity = mockStatic(SecurityContextHolder.class)) {
+            mockedSecurity.when(SecurityContextHolder::getContext).thenReturn(securityContext);
+            when(userRepository.findByEmail("john@example.com")).thenReturn(Optional.of(userEntity));
+
+            cardInfoService.deleteCard(1L);
+        }
         verify(cardInfoRepository).deleteById(1L);
     }
 
     @Test
     void deleteCard_NotFound() {
-        when(cardInfoRepository.existsById(1L)).thenReturn(false);
+        when(cardInfoRepository.findById(1L)).thenReturn(Optional.empty());
 
         assertThrows(CardNotFoundException.class, () -> cardInfoService.deleteCard(1L));
     }
+
 }

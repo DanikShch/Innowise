@@ -7,6 +7,7 @@ import com.innowise.userservice.exception.EmailAlreadyExistsException;
 import com.innowise.userservice.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
@@ -20,9 +21,10 @@ class UserServiceIntegrationTest extends BaseIntegrationTest {
     private UserService userService;
 
     @Test
+    @WithMockUser(username = "alice@example.com")
     void createAndGetUser_Success() {
         UserRequestDto request = new UserRequestDto(
-                "Alice", "Smith", LocalDate.of(1995, 5, 10), "alice@example.com"
+                "Alice", "Smith", LocalDate.of(1995, 5, 10)
         );
 
         UserResponseDto created = userService.createUser(request);
@@ -35,14 +37,15 @@ class UserServiceIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
+    @WithMockUser(username = "bob@example.com")
     void createUser_EmailAlreadyExists_ThrowsException() {
         UserRequestDto user1 = new UserRequestDto(
-                "Bob", "Marley", LocalDate.of(1980, 3, 12), "bob@example.com"
+                "Bob", "Marley", LocalDate.of(1980, 3, 12)
         );
         userService.createUser(user1);
 
         UserRequestDto user2 = new UserRequestDto(
-                "Robert", "Marley", LocalDate.of(1981, 3, 12), "bob@example.com"
+                "Robert", "Marley", LocalDate.of(1981, 3, 12)
         );
 
         assertThrows(EmailAlreadyExistsException.class, () -> userService.createUser(user2));

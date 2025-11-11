@@ -18,4 +18,8 @@ public interface UserService {
     UserResponseDto updateUser(Long id, UserRequestDto userRequestDto);
 
     void deleteUser(Long id);
+
+    UserWithCardsResponseDto getCurrentUser();
+
+    UserResponseDto updateCurrentUser(UserRequestDto userRequestDto);
 }

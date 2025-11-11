@@ -16,6 +16,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,10 +34,12 @@ public class UserServiceImpl implements UserService {
     @Transactional
     @CacheEvict(value = "users", allEntries = true)
     public UserResponseDto createUser(UserRequestDto userRequestDto) {
-        if (userRepository.existsByEmail(userRequestDto.getEmail())) {
-            throw new EmailAlreadyExistsException(userRequestDto.getEmail());
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        if (userRepository.existsByEmail(email)) {
+            throw new EmailAlreadyExistsException(email);
         }
         User user = userMapper.toEntity(userRequestDto);
+        user.setEmail(email);
         return userMapper.toDto(userRepository.save(user));
     }
 
@@ -75,9 +78,6 @@ public class UserServiceImpl implements UserService {
     public UserResponseDto updateUser(Long id, UserRequestDto userRequestDto) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
-        if (!user.getEmail().equals(userRequestDto.getEmail()) && userRepository.existsByEmail(userRequestDto.getEmail())) {
-            throw new EmailAlreadyExistsException(userRequestDto.getEmail());
-        }
         userMapper.updateEntityFromDto(userRequestDto, user);
         return userMapper.toDto(userRepository.save(user));
     }
@@ -90,5 +90,26 @@ public class UserServiceImpl implements UserService {
             throw new UserNotFoundException(id);
         }
         userRepository.deleteById(id);
+    }
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public UserWithCardsResponseDto getCurrentUser() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        return userRepository.findByEmail(username)
+                .map(userMapper::toDtoWithCards)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+    }
+
+    @Override
+    @Transactional
+    public UserResponseDto updateCurrentUser(UserRequestDto userRequestDto) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(username)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+        userMapper.updateEntityFromDto(userRequestDto, user);
+        User savedUser = userRepository.save(user);
+        return userMapper.toDto(savedUser);
     }
 }

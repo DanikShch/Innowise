@@ -22,7 +22,4 @@ public class CardInfoRequestDto {
     @Future(message = "Expiration date must be in the future")
     @NotNull(message = "Expiration date is required")
     private LocalDate expirationDate;
-
-    @NotNull(message = "User ID is required")
-    private Long userId;
 }

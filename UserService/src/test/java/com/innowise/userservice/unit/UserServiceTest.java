@@ -20,6 +20,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -45,7 +48,7 @@ class UserServiceTest {
     private CardInfoService cardInfoService;
 
     private final UserRequestDto userRequestDto = new UserRequestDto(
-            "John", "Doe", LocalDate.of(1990, 1, 1), "john@example.com"
+            "John", "Doe", LocalDate.of(1990, 1, 1)
     );
 
     private final User userEntity = User.builder()
@@ -59,23 +62,41 @@ class UserServiceTest {
 
     @Test
     void createUser_Success() {
-        when(userRepository.existsByEmail("john@example.com")).thenReturn(false);
-        when(userMapper.toEntity(userRequestDto)).thenReturn(userEntity);
-        when(userRepository.save(userEntity)).thenReturn(userEntity);
-        when(userMapper.toDto(userEntity)).thenReturn(userResponseDto);
+        try (var mockedSecurity = mockStatic(SecurityContextHolder.class)) {
+            SecurityContext securityContext = mock(SecurityContext.class);
+            Authentication authentication = mock(Authentication.class);
 
-        UserResponseDto result = userService.createUser(userRequestDto);
+            when(SecurityContextHolder.getContext()).thenReturn(securityContext);
+            when(securityContext.getAuthentication()).thenReturn(authentication);
+            when(authentication.getName()).thenReturn("john@example.com");
 
-        assertNotNull(result);
-        assertEquals(1L, result.getId());
-        verify(userRepository).save(userEntity);
+            when(userRepository.existsByEmail("john@example.com")).thenReturn(false);
+            when(userMapper.toEntity(userRequestDto)).thenReturn(userEntity);
+            when(userRepository.save(userEntity)).thenReturn(userEntity);
+            when(userMapper.toDto(userEntity)).thenReturn(userResponseDto);
+
+            UserResponseDto result = userService.createUser(userRequestDto);
+
+            assertNotNull(result);
+            assertEquals(1L, result.getId());
+            verify(userRepository).save(userEntity);
+        }
     }
 
     @Test
     void createUser_EmailExists() {
-        when(userRepository.existsByEmail("john@example.com")).thenReturn(true);
+        try (var mockedSecurity = mockStatic(SecurityContextHolder.class)) {
+            SecurityContext securityContext = mock(SecurityContext.class);
+            Authentication authentication = mock(Authentication.class);
 
-        assertThrows(EmailAlreadyExistsException.class, () -> userService.createUser(userRequestDto));
+            when(SecurityContextHolder.getContext()).thenReturn(securityContext);
+            when(securityContext.getAuthentication()).thenReturn(authentication);
+            when(authentication.getName()).thenReturn("john@example.com");
+
+            when(userRepository.existsByEmail("john@example.com")).thenReturn(true);
+
+            assertThrows(EmailAlreadyExistsException.class, () -> userService.createUser(userRequestDto));
+        }
     }
 
     @Test
@@ -132,15 +153,13 @@ class UserServiceTest {
 
     @Test
     void updateUser_Success() {
-        UserRequestDto updateDto = new UserRequestDto("John", "Smith",
-                LocalDate.of(1990, 1, 1), "new@example.com");
+        UserRequestDto updateDto = new UserRequestDto("John", "Smith", LocalDate.of(1990, 1, 1));
         User updatedUser = User.builder().id(1L).name("John").surname("Smith")
-                .birthDate(LocalDate.of(1990, 1, 1)).email("new@example.com").build();
+                .birthDate(LocalDate.of(1990, 1, 1)).email("john@example.com").build();
         UserResponseDto updatedResponse = new UserResponseDto(1L, "John", "Smith",
-                LocalDate.of(1990, 1, 1), "new@example.com");
+                LocalDate.of(1990, 1, 1), "john@example.com");
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(userEntity));
-        when(userRepository.existsByEmail("new@example.com")).thenReturn(false);
         when(userRepository.save(any(User.class))).thenReturn(updatedUser);
         when(userMapper.toDto(updatedUser)).thenReturn(updatedResponse);
 
@@ -155,17 +174,6 @@ class UserServiceTest {
         when(userRepository.findById(1L)).thenReturn(Optional.empty());
 
         assertThrows(UserNotFoundException.class, () -> userService.updateUser(1L, userRequestDto));
-    }
-
-    @Test
-    void updateUser_EmailTaken() {
-        UserRequestDto updateDto = new UserRequestDto("John", "Doe",
-                LocalDate.of(1990, 1, 1), "new@example.com");
-
-        when(userRepository.findById(1L)).thenReturn(Optional.of(userEntity));
-        when(userRepository.existsByEmail("new@example.com")).thenReturn(true);
-
-        assertThrows(EmailAlreadyExistsException.class, () -> userService.updateUser(1L, updateDto));
     }
 
     @Test

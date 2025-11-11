@@ -14,3 +14,7 @@ spring:
   config:
     activate:
       on-profile: local
+
+app:
+  auth-service:
+    url: ${LOCAL_AUTH_SERVICE_URL}
