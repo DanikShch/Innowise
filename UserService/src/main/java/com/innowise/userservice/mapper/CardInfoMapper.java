@@ -9,7 +9,6 @@ import org.mapstruct.MappingTarget;
 
 @Mapper(componentModel = "spring")
 public interface CardInfoMapper {
-    @Mapping(source = "userId", target = "user.id")
     CardInfo toEntity(CardInfoRequestDto dto);
 
     @Mapping(source = "user.id", target = "userId")

@@ -16,6 +16,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,8 +41,9 @@ public class CardInfoServiceImpl implements CardInfoService {
         if (cardInfoRepository.existsByNumber(cardRequestDto.getNumber())) {
             throw new CardNumberAlreadyExistsException(cardRequestDto.getNumber());
         }
-        User user = userRepository.findById(cardRequestDto.getUserId())
-                .orElseThrow(() -> new UserNotFoundException(cardRequestDto.getUserId()));
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(username)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
         CardInfo cardInfo = cardInfoMapper.toEntity(cardRequestDto);
         cardInfo.setUser(user);
         return cardInfoMapper.toDto(cardInfoRepository.save(cardInfo));
@@ -73,8 +75,14 @@ public class CardInfoServiceImpl implements CardInfoService {
         if (!cardInfo.getNumber().equals(cardRequestDto.getNumber()) && cardInfoRepository.existsByNumber(cardRequestDto.getNumber())) {
             throw new CardNumberAlreadyExistsException(cardRequestDto.getNumber());
         }
-        if (!cardInfo.getUser().getId().equals(cardRequestDto.getUserId()) && !userRepository.existsById(cardRequestDto.getUserId())) {
-            throw new UserNotFoundException(cardRequestDto.getUserId());
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User currentUser = userRepository.findByEmail(username)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        boolean isAdmin = SecurityContextHolder.getContext().getAuthentication().getAuthorities()
+                .stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        if (!isAdmin && !cardInfo.getUser().getId().equals(currentUser.getId())) {
+            throw new AccessDeniedException("You can update only your own cards");
         }
         cardInfoMapper.updateEntityFromDto(cardRequestDto, cardInfo);
         return cardInfoMapper.toDto(cardInfoRepository.save(cardInfo));
@@ -84,8 +92,15 @@ public class CardInfoServiceImpl implements CardInfoService {
     @Transactional
     @CacheEvict(value = {"cards", "user-cards"}, allEntries = true)
     public void deleteCard(Long id) {
-        if (!cardInfoRepository.existsById(id)) {
-            throw new CardNotFoundException(id);
+        CardInfo cardInfo = cardInfoRepository.findById(id)
+                .orElseThrow(() -> new CardNotFoundException(id));
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User currentUser = userRepository.findByEmail(username)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+        boolean isAdmin = SecurityContextHolder.getContext().getAuthentication().getAuthorities()
+                .stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        if (!isAdmin && !cardInfo.getUser().getId().equals(currentUser.getId())) {
+            throw new AccessDeniedException("You can delete only your own cards");
         }
         cardInfoRepository.deleteById(id);
     }
