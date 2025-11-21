@@ -1,0 +1,12 @@
+spring:
+  datasource:
+    url: ${LOCAL_POSTGRES_URL}
+    username: ${LOCAL_POSTGRES_USER}
+    password: ${LOCAL_POSTGRES_PASSWORD}
+  jpa:
+    show-sql: true
+  liquibase:
+    enabled: true
+  config:
+    activate:
+      on-profile: local

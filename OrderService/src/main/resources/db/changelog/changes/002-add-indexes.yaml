@@ -1,0 +1,34 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-add-indexes
+      author: danik
+      changes:
+        - createIndex:
+            indexName: idx_orders_user_id
+            tableName: orders
+            columns:
+              - column:
+                  name: user_id
+
+        - createIndex:
+            indexName: idx_orders_status_creation_date
+            tableName: orders
+            columns:
+              - column:
+                  name: status
+              - column:
+                  name: creation_date
+
+        - createIndex:
+            indexName: idx_order_items_order_id
+            tableName: order_items
+            columns:
+              - column:
+                  name: order_id
+
+        - createIndex:
+            indexName: idx_item_price
+            tableName: items
+            columns:
+              - column:
+                  name: price
