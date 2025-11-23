@@ -10,3 +10,5 @@ spring:
   config:
     activate:
       on-profile: local
+server:
+  port: 8083
