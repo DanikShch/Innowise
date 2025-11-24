@@ -1,4 +1,4 @@
-package com.innowise.orderservice.dto.mapper;
+package com.innowise.orderservice.mapper;
 
 import com.innowise.orderservice.dto.request.OrderItemRequestDto;
 import com.innowise.orderservice.dto.response.OrderItemResponseDto;
@@ -14,7 +14,5 @@ public interface OrderItemMapper {
     @Mapping(target = "item", ignore = true)
     OrderItem toEntity(OrderItemRequestDto dto);
 
-    @Mapping(source = "item", target = "item")
-    @Mapping(source = "quantity", target = "quantity")
     OrderItemResponseDto toDto(OrderItem entity);
 }

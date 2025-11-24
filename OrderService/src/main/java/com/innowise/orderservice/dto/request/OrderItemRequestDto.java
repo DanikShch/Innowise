@@ -1,7 +1,9 @@
 package com.innowise.orderservice.dto.request;
 
 import jakarta.validation.constraints.NotNull;
+import lombok.Data;
 
+@Data
 public class OrderItemRequestDto {
     @NotNull(message = "Item ID cannot be null")
     private Long itemId;

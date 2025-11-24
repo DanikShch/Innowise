@@ -1,4 +1,4 @@
-package com.innowise.orderservice.dto.mapper;
+package com.innowise.orderservice.mapper;
 
 import com.innowise.orderservice.dto.request.OrderRequestDto;
 import com.innowise.orderservice.dto.response.OrderResponseDto;

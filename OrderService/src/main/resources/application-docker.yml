@@ -1,0 +1,3 @@
+app:
+  user-service:
+    url: ${DOCKER_USER_SERVICE_URL}
