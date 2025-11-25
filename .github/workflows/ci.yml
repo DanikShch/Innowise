@@ -42,6 +42,12 @@ jobs:
       - name: Integration Tests UserService
         run: mvn -B -f UserService/pom.xml verify -Dgroups=integration
 
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
       - name: Build & Push UserService Docker
         run: |
           docker build -t danikshch/userservice:latest UserService
@@ -77,6 +83,12 @@ jobs:
 
       - name: Integration Tests OrderService
         run: mvn -B -f OrderService/pom.xml verify -Dgroups=integration
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build & Push OrderService Docker
         run: |
