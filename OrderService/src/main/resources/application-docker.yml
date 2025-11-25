@@ -11,7 +11,7 @@ spring:
       host: ${DOCKER_REDIS_HOST:redis}
       port: ${DOCKER_REDIS_PORT:6379}
 server:
-  port: 8083
+  port: 8082
 
 app:
   user-service:

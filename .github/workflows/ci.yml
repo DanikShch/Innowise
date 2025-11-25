@@ -11,13 +11,11 @@ on:
       - develop
 
 jobs:
-  build-test-sonar-docker:
+  user-service:
     runs-on: ubuntu-latest
     env:
-      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -28,13 +26,6 @@ jobs:
           java-version: 21
           distribution: 'temurin'
 
-      - name: Cache SonarQube packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.sonar/cache
-          key: ${{ runner.os }}-sonar
-          restore-keys: ${{ runner.os }}-sonar
-
       - name: Cache Maven packages
         uses: actions/cache@v4
         with:
@@ -42,30 +33,52 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('UserService/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
 
-      - name: Build project
+      - name: Build UserService
         run: mvn -B -f UserService/pom.xml clean install -DskipTests
 
-      - name: Run Unit Tests with Coverage
+      - name: Unit Tests UserService
         run: mvn -B -f UserService/pom.xml clean test -Dgroups=unit -Pcoverage
 
-      - name: Run Integration Tests
+      - name: Integration Tests UserService
         run: mvn -B -f UserService/pom.xml verify -Dgroups=integration
 
+      - name: Build & Push UserService Docker
+        run: |
+          docker build -t danikshch/userservice:latest UserService
+          docker push danikshch/userservice:latest
 
-      - name: SonarQube analysis
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: mvn -B -f UserService/pom.xml org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=DanikShch_Innowise -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${{ secrets.SONAR_TOKEN }} -Pcoverage
+  order-service:
+    runs-on: ubuntu-latest
+    env:
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v2
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          java-version: 21
+          distribution: 'temurin'
 
-      - name: Build Docker image
-        run: docker build -t danikshch/userservice:latest UserService
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('OrderService/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
 
-      - name: Push Docker image
-        run: docker push danikshch/userservice:latest
+      - name: Build OrderService
+        run: mvn -B -f OrderService/pom.xml clean install -DskipTests
+
+      - name: Unit Tests OrderService
+        run: mvn -B -f OrderService/pom.xml clean test -Dgroups=unit
+
+      - name: Integration Tests OrderService
+        run: mvn -B -f OrderService/pom.xml verify -Dgroups=integration
+
+      - name: Build & Push OrderService Docker
+        run: |
+          docker build -t danikshch/orderservice:latest OrderService
+          docker push danikshch/orderservice:latest
