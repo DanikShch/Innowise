@@ -9,7 +9,6 @@ import com.innowise.orderservice.exception.AccessDeniedException;
 import com.innowise.orderservice.exception.InvalidOrderStatusException;
 import com.innowise.orderservice.exception.ItemNotFoundException;
 import com.innowise.orderservice.exception.OrderNotFoundException;
-import com.innowise.orderservice.exception.ServiceUnavailableException;
 import com.innowise.orderservice.mapper.OrderItemMapper;
 import com.innowise.orderservice.mapper.OrderMapper;
 import com.innowise.orderservice.model.Item;

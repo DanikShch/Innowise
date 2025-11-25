@@ -8,7 +8,6 @@ import com.innowise.orderservice.dto.response.UserResponseDto;
 import com.innowise.orderservice.model.Item;
 import com.innowise.orderservice.model.OrderStatus;
 import com.innowise.orderservice.repository.ItemRepository;
-import com.innowise.orderservice.repository.OrderRepository;
 import com.innowise.orderservice.service.OrderService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
