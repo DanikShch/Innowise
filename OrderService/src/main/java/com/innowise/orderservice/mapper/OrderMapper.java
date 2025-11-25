@@ -18,5 +18,6 @@ public interface OrderMapper {
 
     @Mapping(target = "user", ignore = true)
     @Mapping(target = "totalPrice", ignore = true)
+    @Mapping(source = "orderItems", target = "items")
     OrderResponseDto toDto(Order entity);
 }

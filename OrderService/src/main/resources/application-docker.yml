@@ -1,3 +1,18 @@
+spring:
+  config:
+    activate:
+      on-profile: docker
+  datasource:
+    url: ${DOCKER_POSTGRES_URL}
+    username: ${DOCKER_POSTGRES_USER}
+    password: ${DOCKER_POSTGRES_PASSWORD}
+  data:
+    redis:
+      host: ${DOCKER_REDIS_HOST:redis}
+      port: ${DOCKER_REDIS_PORT:6379}
+server:
+  port: 8083
+
 app:
   user-service:
     url: ${DOCKER_USER_SERVICE_URL}

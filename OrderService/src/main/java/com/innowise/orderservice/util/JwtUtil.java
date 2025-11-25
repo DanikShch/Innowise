@@ -33,6 +33,26 @@ public class JwtUtil {
         }
     }
 
+    public Role extractRole(String token) {
+        try {
+            if (token.startsWith("Bearer ")) {
+                token = token.substring(7);
+            }
+
+            String role = Jwts.parser()
+                    .verifyWith(getSigningKey())
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload()
+                    .get("auth", String.class);
+
+            return Role.valueOf(role);
+        } catch (Exception e) {
+            log.error("Error extracting role from JWT: {}", e.getMessage());
+            throw new RuntimeException("Invalid JWT token");
+        }
+    }
+
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(jwtSecret.getBytes());
     }

@@ -16,6 +16,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -49,6 +50,15 @@ public class UserServiceImpl implements UserService {
     public UserWithCardsResponseDto getUserById(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
+        String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
+        User currentUser = userRepository.findByEmail(currentUsername)
+                .orElseThrow(() -> new UserNotFoundException("Current user not found"));
+        boolean isAdmin = SecurityContextHolder.getContext().getAuthentication().getAuthorities()
+                .stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        boolean isOwnData = user.getId().equals(currentUser.getId());
+        if (!isAdmin && !isOwnData) {
+            throw new AccessDeniedException("You can access only your own data");
+        }
         List<CardInfoResponseDto> cards = cardInfoService.getCardsByUserId(id);
         UserWithCardsResponseDto dto = userMapper.toDtoWithCards(user);
         dto.setCards(cards);

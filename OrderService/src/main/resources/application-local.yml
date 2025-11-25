@@ -6,8 +6,10 @@ spring:
     url: ${LOCAL_POSTGRES_URL}
     username: ${LOCAL_POSTGRES_USER}
     password: ${LOCAL_POSTGRES_PASSWORD}
-  jpa:
-    show-sql: true
+  data:
+    redis:
+      host: ${LOCAL_REDIS_HOST}
+      port: ${LOCAL_REDIS_PORT}
 
 server:
   port: 8083
