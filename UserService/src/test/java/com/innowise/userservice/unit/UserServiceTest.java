@@ -101,16 +101,28 @@ class UserServiceTest {
 
     @Test
     void getUserById_Success() {
-        UserWithCardsResponseDto userWithCardsDto = new UserWithCardsResponseDto(
-                1L, "John", "Doe", LocalDate.now(), "john@test.com", List.of()
-        );
-        when(userRepository.findById(1L)).thenReturn(Optional.of(userEntity));
-        when(userMapper.toDtoWithCards(userEntity)).thenReturn(userWithCardsDto);
-        when(cardInfoService.getCardsByUserId(1L)).thenReturn(List.of());
-        UserWithCardsResponseDto result = userService.getUserById(1L);
+        try (var mockedSecurity = mockStatic(SecurityContextHolder.class)) {
+            SecurityContext securityContext = mock(SecurityContext.class);
+            Authentication authentication = mock(Authentication.class);
 
-        assertNotNull(result);
-        assertEquals(1L, result.getId());
+            when(SecurityContextHolder.getContext()).thenReturn(securityContext);
+            when(securityContext.getAuthentication()).thenReturn(authentication);
+            when(authentication.getName()).thenReturn("john@test.com");
+            when(userRepository.findById(1L)).thenReturn(Optional.of(userEntity));
+            when(userRepository.findByEmail("john@test.com")).thenReturn(Optional.of(userEntity));
+            UserWithCardsResponseDto userWithCardsDto = new UserWithCardsResponseDto(
+                    1L, "John", "Doe", LocalDate.now(), "john@test.com", List.of()
+            );
+            when(userMapper.toDtoWithCards(userEntity)).thenReturn(userWithCardsDto);
+            when(cardInfoService.getCardsByUserId(1L)).thenReturn(List.of());
+            UserWithCardsResponseDto result = userService.getUserById(1L);
+
+            assertNotNull(result);
+            assertEquals(1L, result.getId());
+            verify(userRepository).findById(1L);
+            verify(userRepository).findByEmail("john@test.com");
+            verify(cardInfoService).getCardsByUserId(1L);
+        }
     }
 
     @Test

@@ -1,0 +1,19 @@
+spring:
+  config:
+    activate:
+      on-profile: local
+  datasource:
+    url: ${LOCAL_POSTGRES_URL}
+    username: ${LOCAL_POSTGRES_USER}
+    password: ${LOCAL_POSTGRES_PASSWORD}
+  data:
+    redis:
+      host: ${LOCAL_REDIS_HOST}
+      port: ${LOCAL_REDIS_PORT}
+
+server:
+  port: 8082
+
+app:
+  user-service:
+    url: ${LOCAL_USER_SERVICE_URL}
