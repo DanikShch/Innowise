@@ -10,13 +10,11 @@ spring:
       metrics:
         enabled: true
       routes:
-        # Auth Service (docker)
         - id: auth-service
           uri: ${DOCKER_AUTH_SERVICE_URL}
           predicates:
             - Path=/api/v1/auth/**
 
-        # User Service (docker)
         - id: user-service
           uri: ${DOCKER_USER_SERVICE_URL}
           predicates:
@@ -24,7 +22,6 @@ spring:
           filters:
             - JwtAuthFilter
 
-        # Order Service (docker)
         - id: order-service
           uri: ${DOCKER_ORDER_SERVICE_URL}
           predicates:
