@@ -1,0 +1,33 @@
+spring:
+  config:
+    activate:
+      on-profile: docker
+  cloud:
+    gateway:
+      httpclient:
+        connect-timeout: 10000
+        response-timeout: 10s
+      metrics:
+        enabled: true
+      routes:
+        - id: auth-service
+          uri: ${DOCKER_AUTH_SERVICE_URL}
+          predicates:
+            - Path=/api/v1/auth/**
+
+        - id: user-service
+          uri: ${DOCKER_USER_SERVICE_URL}
+          predicates:
+            - Path=/api/v1/users/**,/api/v1/cards/**
+          filters:
+            - JwtAuthFilter
+
+        - id: order-service
+          uri: ${DOCKER_ORDER_SERVICE_URL}
+          predicates:
+            - Path=/api/v1/orders/**,/api/v1/items/**
+          filters:
+            - JwtAuthFilter
+
+server:
+  port: ${DOCKER_SERVER_PORT:8085}
