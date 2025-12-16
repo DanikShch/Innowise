@@ -4,6 +4,7 @@ import com.innowise.paymentservice.Repository.PaymentRepository;
 import com.innowise.paymentservice.client.RandomNumberClient;
 import com.innowise.paymentservice.dto.PaymentRequestDto;
 import com.innowise.paymentservice.dto.PaymentResponseDto;
+import com.innowise.paymentservice.kafka.event.CreateOrderEvent;
 import com.innowise.paymentservice.mapper.PaymentMapper;
 import com.innowise.paymentservice.model.Payment;
 import com.innowise.paymentservice.model.PaymentStatus;
@@ -60,4 +61,26 @@ public class PaymentServiceImpl implements PaymentService {
         return payments.stream().filter(payment -> payment.getStatus().equals(PaymentStatus.SUCCESS))
                 .map(Payment::getPaymentAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
     }
+
+    @Override
+    public void processOrderPayment(CreateOrderEvent event) {
+
+        Payment payment = Payment.builder()
+                .orderId(event.getOrderId())
+                .userId(event.getUserId())
+                .paymentAmount(event.getTotalPrice())
+                .timestamp(Instant.now())
+                .build();
+
+        int randomNumber = randomNumberClient.getRandomNumber();
+
+        if (randomNumber % 2 == 0) {
+            payment.setStatus(PaymentStatus.SUCCESS);
+        } else {
+            payment.setStatus(PaymentStatus.FAILED);
+        }
+
+        paymentRepository.save(payment);
+    }
+
 }

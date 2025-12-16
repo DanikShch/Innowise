@@ -9,6 +9,8 @@ import com.innowise.orderservice.exception.AccessDeniedException;
 import com.innowise.orderservice.exception.InvalidOrderStatusException;
 import com.innowise.orderservice.exception.ItemNotFoundException;
 import com.innowise.orderservice.exception.OrderNotFoundException;
+import com.innowise.orderservice.kafka.event.CreateOrderEvent;
+import com.innowise.orderservice.kafka.producer.OrderEventProducer;
 import com.innowise.orderservice.mapper.OrderItemMapper;
 import com.innowise.orderservice.mapper.OrderMapper;
 import com.innowise.orderservice.model.Item;
@@ -26,6 +28,7 @@ import org.springframework.cache.annotation.Caching;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.List;
 import java.math.BigDecimal;
 
@@ -38,6 +41,7 @@ public class OrderServiceImpl implements OrderService {
     private final UserServiceClient userServiceClient;
     private final ItemRepository itemRepository;
     private final OrderItemMapper orderItemMapper;
+    private final OrderEventProducer orderEventProducer;
 
     @Override
     @Transactional
@@ -52,9 +56,21 @@ public class OrderServiceImpl implements OrderService {
         addOrderItemsToOrder(order, orderRequestDto.getItems());
 
         Order savedOrder = orderRepository.save(order);
+
+        BigDecimal totalPrice = calculateOrderTotal(savedOrder);
+
+        CreateOrderEvent event = CreateOrderEvent.builder()
+                .orderId(savedOrder.getId())
+                .userId(savedOrder.getUserId())
+                .totalPrice(totalPrice)
+                .createdAt(Instant.now())
+                .build();
+
+        orderEventProducer.sendCreateOrderEvent(event);
+
         OrderResponseDto response = orderMapper.toDto(savedOrder);
         response.setUser(user);
-        response.setTotalPrice(calculateOrderTotal(savedOrder));
+        response.setTotalPrice(totalPrice);
 
         return response;
     }
