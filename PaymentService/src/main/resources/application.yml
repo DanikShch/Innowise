@@ -13,9 +13,8 @@ spring:
     enabled: false
     change-log: classpath:db/changelog/db.changelog-master.yaml
 
-#logging:
-#  level:
-#    liquibase: DEBUG
-#    liquibase.executor: DEBUG
-#    liquibase.changelog: DEBUG
+external:
+  random-api:
+    url: http://www.randomnumberapi.com/api/v1.0/random?min=1&max=100&count=1
+
 

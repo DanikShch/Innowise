@@ -18,9 +18,9 @@ databaseChangeLog:
                     - payment_amount
                   properties:
                     order_id:
-                      bsonType: string
+                      bsonType: long
                     user_id:
-                      bsonType: string
+                      bsonType: long
                     status:
                       bsonType: string
                       enum: [CREATED, SUCCESS, FAILED]
@@ -37,7 +37,7 @@ databaseChangeLog:
         - createIndex:
             collectionName: payments
             keys: '{ order_id: 1 }'
-            options: '{ unique: true, name: "idx_payments_order_id" }'
+            options: '{ name: "idx_payments_order_id" }'
 
         - createIndex:
             collectionName: payments
