@@ -1,0 +1,55 @@
+databaseChangeLog:
+
+  - changeSet:
+      id: 001-create-payments-collection
+      author: danik
+      changes:
+        - createCollection:
+            collectionName: payments
+            options:
+              validator:
+                $jsonSchema:
+                  bsonType: object
+                  required:
+                    - order_id
+                    - user_id
+                    - status
+                    - timestamp
+                    - payment_amount
+                  properties:
+                    order_id:
+                      bsonType: string
+                    user_id:
+                      bsonType: string
+                    status:
+                      bsonType: string
+                      enum: [CREATED, SUCCESS, FAILED]
+                    timestamp:
+                      bsonType: date
+                    payment_amount:
+                      bsonType: decimal
+                      minimum: 0
+
+  - changeSet:
+      id: 002-create-payments-indexes
+      author: danik
+      changes:
+        - createIndex:
+            collectionName: payments
+            keys: '{ order_id: 1 }'
+            options: '{ unique: true, name: "idx_payments_order_id" }'
+
+        - createIndex:
+            collectionName: payments
+            keys: '{ user_id: 1 }'
+            options: '{ name: "idx_payments_user_id" }'
+
+        - createIndex:
+            collectionName: payments
+            keys: '{ status: 1 }'
+            options: '{ name: "idx_payments_status" }'
+
+        - createIndex:
+            collectionName: payments
+            keys: '{ timestamp: -1 }'
+            options: '{ name: "idx_payments_timestamp" }'

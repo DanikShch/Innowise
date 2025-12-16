@@ -1,0 +1,21 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: PaymentService
+
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/payment_db
+
+  liquibase:
+    enabled: false
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+
+#logging:
+#  level:
+#    liquibase: DEBUG
+#    liquibase.executor: DEBUG
+#    liquibase.changelog: DEBUG
+
