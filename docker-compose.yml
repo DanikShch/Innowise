@@ -1,3 +1,5 @@
+version: "3.9"
+
 services:
   auth-postgres:
     image: postgres:15
@@ -59,9 +61,9 @@ services:
   redis:
     image: redis:7-alpine
     container_name: redis
+    command: redis-server --appendonly yes
     ports:
       - "6379:6379"
-    command: redis-server --appendonly yes
     networks:
       - microservices-net
     healthcheck:
@@ -69,6 +71,42 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  mongo:
+    image: mongo:7
+    container_name: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - microservices-net
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.runCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  kafka:
+    image: apache/kafka:latest
+    container_name: kafka
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka:9093"
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+    networks:
+      - microservices-net
 
   authentication-service:
     build:
@@ -133,6 +171,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      kafka:
+        condition: service_started
       user-service:
         condition: service_started
     env_file:
@@ -146,9 +186,34 @@ services:
       DOCKER_REDIS_HOST: ${DOCKER_REDIS_HOST}
       DOCKER_REDIS_PORT: ${DOCKER_REDIS_PORT}
       DOCKER_USER_SERVICE_URL: ${DOCKER_USER_SERVICE_URL}
+      DOCKER_KAFKA_BOOTSTRAP_SERVERS: ${DOCKER_KAFKA_BOOTSTRAP_SERVERS}
       JWT_SECRET: ${JWT_SECRET}
     ports:
       - "8082:8082"
+    networks:
+      - microservices-net
+    restart: unless-stopped
+
+  payment-service:
+    build:
+      context: ./PaymentService
+      dockerfile: Dockerfile
+    container_name: payment-service
+    depends_on:
+      mongo:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    env_file:
+      - ./.env
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DOCKER_MONGO_URI: ${DOCKER_MONGO_URI}
+      DOCKER_KAFKA_BOOTSTRAP_SERVERS: ${DOCKER_KAFKA_BOOTSTRAP_SERVERS}
+      DOCKER_ORDER_SERVICE_URL: ${DOCKER_ORDER_SERVICE_URL}
+      RANDOM_API_URL: ${RANDOM_API_URL}
+    ports:
+      - "8084:8084"
     networks:
       - microservices-net
     restart: unless-stopped
@@ -162,6 +227,7 @@ services:
       - authentication-service
       - user-service
       - order-service
+      - payment-service
     env_file:
       - ./.env
     environment:
@@ -170,6 +236,7 @@ services:
       DOCKER_AUTH_SERVICE_URL: ${DOCKER_AUTH_SERVICE_URL}
       DOCKER_USER_SERVICE_URL: ${DOCKER_USER_SERVICE_URL}
       DOCKER_ORDER_SERVICE_URL: ${DOCKER_ORDER_SERVICE_URL}
+      DOCKER_PAYMENT_SERVICE_URL: ${DOCKER_PAYMENT_SERVICE_URL}
       JWT_SECRET: ${JWT_SECRET}
     ports:
       - "8085:8085"
@@ -181,6 +248,7 @@ volumes:
   auth-pgdata:
   user-pgdata:
   order-pgdata:
+  mongo-data:
 
 networks:
   microservices-net:

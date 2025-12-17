@@ -4,10 +4,10 @@ import org.junit.jupiter.api.Tag;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
 
 @Testcontainers
@@ -20,12 +20,7 @@ public abstract class BaseIntegrationTest {
             new MongoDBContainer("mongo:7.0");
 
     @Container
-    static final KafkaContainer kafka =
-            new KafkaContainer(
-                    DockerImageName
-                            .parse("confluentinc/cp-kafka:7.6.0")
-                            .asCompatibleSubstituteFor("confluentinc/cp-kafka")
-            );
+    static final org.testcontainers.kafka.KafkaContainer kafka = new KafkaContainer(DockerImageName.parse("apache/kafka:3.9.1"));
 
     @DynamicPropertySource
     static void registerProperties(DynamicPropertyRegistry registry) {
