@@ -7,12 +7,10 @@ import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
-import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
@@ -20,26 +18,36 @@ import java.util.List;
 @Component
 public class JwtTokenProvider {
 
+    private static final String AUTH_KEY = "auth";
+    private static final String USER_ID_KEY = "userId";
     private final JwtConfig jwtConfig;
     private final SecretKey secretKey;
-    private static final String AUTHORITIES_KEY = "auth";
 
     public JwtTokenProvider(JwtConfig jwtConfig) {
         this.jwtConfig = jwtConfig;
         this.secretKey = Keys.hmacShaKeyFor(jwtConfig.getSecret().getBytes());
     }
 
-    public String generateAccessToken(String username, Role role) {
+    public String generateAccessToken(String username, Role role, Long userId) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtConfig.getAccessTokenExpiration());
 
-        return Jwts.builder()
+        JwtBuilder builder = Jwts.builder()
                 .subject(username)
-                .claim(AUTHORITIES_KEY, role.name())
+                .claim(AUTH_KEY, role.name())
                 .issuedAt(now)
                 .expiration(expiryDate)
-                .signWith(secretKey, Jwts.SIG.HS256)
-                .compact();
+                .signWith(secretKey, Jwts.SIG.HS256);
+
+        if (userId != null) {
+            builder.claim(USER_ID_KEY, userId);
+        }
+
+        return builder.compact();
+    }
+
+    public String generateSystemToken(String username, Role role) {
+        return generateAccessToken(username, role, null);
     }
 
     public String generateRefreshToken(String username) {
@@ -61,46 +69,38 @@ public class JwtTokenProvider {
                     .build()
                     .parseSignedClaims(token);
             return true;
-        } catch (SecurityException | MalformedJwtException e) {
-            log.error("Invalid JWT signature: {}", e.getMessage());
-        } catch (ExpiredJwtException e) {
-            log.error("JWT token is expired: {}", e.getMessage());
-        } catch (UnsupportedJwtException e) {
-            log.error("JWT token is unsupported: {}", e.getMessage());
-        } catch (IllegalArgumentException e) {
-            log.error("JWT claims string is empty: {}", e.getMessage());
-        } catch (JwtException e) {
+        } catch (JwtException | IllegalArgumentException e) {
             log.error("JWT validation error: {}", e.getMessage());
+            return false;
         }
-        return false;
     }
 
     public String getUsernameFromToken(String token) {
-        return Jwts.parser()
-                .verifyWith(secretKey)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload()
-                .getSubject();
+        return parseClaims(token).getSubject();
     }
 
     public Role getRoleFromToken(String token) {
-        String role = Jwts.parser()
-                .verifyWith(secretKey)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload()
-                .get(AUTHORITIES_KEY, String.class);
+        String role = parseClaims(token).get(AUTH_KEY, String.class);
         return Role.valueOf(role);
+    }
+
+    public Long getUserIdFromToken(String token) {
+        return parseClaims(token).get(USER_ID_KEY, Long.class);
     }
 
     public Authentication getAuthentication(String token) {
         String username = getUsernameFromToken(token);
         Role role = getRoleFromToken(token);
 
-        Collection<? extends GrantedAuthority> authorities =
-                List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
+        var authority = new SimpleGrantedAuthority("ROLE_" + role.name());
+        return new UsernamePasswordAuthenticationToken(username, null, List.of(authority));
+    }
 
-        return new UsernamePasswordAuthenticationToken(username, "", authorities);
+    private Claims parseClaims(String token) {
+        return Jwts.parser()
+                .verifyWith(secretKey)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
     }
 }

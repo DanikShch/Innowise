@@ -1,12 +1,9 @@
 package com.innowise.paymentservice.controller;
 
-import com.innowise.paymentservice.dto.PaymentRequestDto;
 import com.innowise.paymentservice.dto.PaymentResponseDto;
 import com.innowise.paymentservice.model.PaymentStatus;
 import com.innowise.paymentservice.service.PaymentService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,12 +17,6 @@ import java.util.List;
 public class PaymentController {
 
     private final PaymentService paymentService;
-
-    @PostMapping
-    public ResponseEntity<PaymentResponseDto> createPayment(@Valid @RequestBody PaymentRequestDto paymentRequestDto) {
-        PaymentResponseDto paymentResponseDto = paymentService.createPayment(paymentRequestDto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(paymentResponseDto);
-    }
 
     @GetMapping(params = "orderId")
     public ResponseEntity<List<PaymentResponseDto>> getPaymentsByOrderId(@RequestParam Long orderId) {
@@ -49,5 +40,10 @@ public class PaymentController {
     public ResponseEntity<BigDecimal> getTotalSum(@RequestParam Instant from, @RequestParam Instant to) {
         BigDecimal totalSum = paymentService.getTotalSum(from, to);
         return ResponseEntity.ok(totalSum);
+    }
+
+    @GetMapping("/my")
+    public ResponseEntity<List<PaymentResponseDto>> getMyPayments() {
+        return ResponseEntity.ok(paymentService.getMyPayments());
     }
 }

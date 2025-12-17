@@ -2,7 +2,6 @@ package com.innowise.paymentservice.service.impl;
 
 import com.innowise.paymentservice.Repository.PaymentRepository;
 import com.innowise.paymentservice.client.RandomNumberClient;
-import com.innowise.paymentservice.dto.PaymentRequestDto;
 import com.innowise.paymentservice.dto.PaymentResponseDto;
 import com.innowise.paymentservice.kafka.event.CreateOrderEvent;
 import com.innowise.paymentservice.kafka.event.CreatePaymentEvent;
@@ -12,6 +11,7 @@ import com.innowise.paymentservice.model.Payment;
 import com.innowise.paymentservice.model.PaymentStatus;
 import com.innowise.paymentservice.service.PaymentService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -26,19 +26,6 @@ public class PaymentServiceImpl implements PaymentService {
     private final PaymentMapper paymentMapper;
     private final RandomNumberClient randomNumberClient;
     private final PaymentEventProducer paymentEventProducer;
-
-    @Override
-    public PaymentResponseDto createPayment(PaymentRequestDto paymentRequestDto){
-        Payment payment = paymentMapper.toEntity(paymentRequestDto);
-        int randomNumber = randomNumberClient.getRandomNumber();
-        if (randomNumber % 2 == 0) {
-            payment.setStatus(PaymentStatus.SUCCESS);
-        } else {
-            payment.setStatus(PaymentStatus.FAILED);
-        }
-        payment.setTimestamp(Instant.now());
-        return paymentMapper.toDto(paymentRepository.save(payment));
-    }
 
     @Override
     public List<PaymentResponseDto> getPaymentsByOrderId(Long orderId) {
@@ -97,4 +84,21 @@ public class PaymentServiceImpl implements PaymentService {
 
     }
 
+    @Override
+    public List<PaymentResponseDto> getMyPayments() {
+
+        var authentication = SecurityContextHolder
+                .getContext()
+                .getAuthentication();
+
+        if (authentication == null || authentication.getCredentials() == null) {
+            throw new RuntimeException("Unauthenticated");
+        }
+        Long userId = (Long) authentication.getCredentials();
+
+        return paymentRepository.findByUserId(userId)
+                .stream()
+                .map(paymentMapper::toDto)
+                .toList();
+    }
 }
