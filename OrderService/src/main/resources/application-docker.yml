@@ -10,6 +10,8 @@ spring:
     redis:
       host: ${DOCKER_REDIS_HOST:redis}
       port: ${DOCKER_REDIS_PORT:6379}
+  kafka:
+    bootstrap-servers: ${DOCKER_KAFKA_BOOTSTRAP_SERVERS}
 server:
   port: 8082
 

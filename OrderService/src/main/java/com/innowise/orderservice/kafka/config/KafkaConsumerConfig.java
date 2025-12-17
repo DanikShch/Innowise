@@ -1,6 +1,6 @@
-package com.innowise.paymentservice.kafka.config;
+package com.innowise.orderservice.kafka.config;
 
-import com.innowise.paymentservice.kafka.event.CreateOrderEvent;
+import com.innowise.orderservice.kafka.event.CreatePaymentEvent;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,17 +16,17 @@ import java.util.Map;
 
 @Configuration
 public class KafkaConsumerConfig {
+
     @Value("${spring.kafka.bootstrap-servers}")
     private String bootstrapServers;
 
-    @Value("${app.kafka.payment-group-id}")
+    @Value("${app.kafka.order-group-id}")
     private String groupId;
 
     @Bean
-    public ConsumerFactory<String, CreateOrderEvent> consumerFactory() {
+    public ConsumerFactory<String, CreatePaymentEvent> consumerFactory() {
 
-        JsonDeserializer<CreateOrderEvent> deserializer =
-                new JsonDeserializer<>(CreateOrderEvent.class, false);
+        JsonDeserializer<CreatePaymentEvent> deserializer = new JsonDeserializer<>(CreatePaymentEvent.class, false);
 
         deserializer.addTrustedPackages("*");
         deserializer.setRemoveTypeHeaders(true);
@@ -45,15 +45,14 @@ public class KafkaConsumerConfig {
         );
     }
 
-
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, CreateOrderEvent>
-    kafkaListenerContainerFactory() {
+    public ConcurrentKafkaListenerContainerFactory<String, CreatePaymentEvent> kafkaListenerContainerFactory() {
 
-        ConcurrentKafkaListenerContainerFactory<String, CreateOrderEvent> factory =
+        ConcurrentKafkaListenerContainerFactory<String, CreatePaymentEvent> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
 
         factory.setConsumerFactory(consumerFactory());
         return factory;
     }
 }
+

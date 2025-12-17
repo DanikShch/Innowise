@@ -5,6 +5,8 @@ import com.innowise.paymentservice.client.RandomNumberClient;
 import com.innowise.paymentservice.dto.PaymentRequestDto;
 import com.innowise.paymentservice.dto.PaymentResponseDto;
 import com.innowise.paymentservice.kafka.event.CreateOrderEvent;
+import com.innowise.paymentservice.kafka.event.CreatePaymentEvent;
+import com.innowise.paymentservice.kafka.produser.PaymentEventProducer;
 import com.innowise.paymentservice.mapper.PaymentMapper;
 import com.innowise.paymentservice.model.Payment;
 import com.innowise.paymentservice.model.PaymentStatus;
@@ -23,6 +25,7 @@ public class PaymentServiceImpl implements PaymentService {
     private final PaymentRepository paymentRepository;
     private final PaymentMapper paymentMapper;
     private final RandomNumberClient randomNumberClient;
+    private final PaymentEventProducer paymentEventProducer;
 
     @Override
     public PaymentResponseDto createPayment(PaymentRequestDto paymentRequestDto){
@@ -80,7 +83,18 @@ public class PaymentServiceImpl implements PaymentService {
             payment.setStatus(PaymentStatus.FAILED);
         }
 
-        paymentRepository.save(payment);
+        Payment savedPayment = paymentRepository.save(payment);
+
+        paymentEventProducer.send(
+                new CreatePaymentEvent(
+                        savedPayment.getOrderId(),
+                        savedPayment.getUserId(),
+                        savedPayment.getPaymentAmount(),
+                        savedPayment.getStatus().name(),
+                        savedPayment.getTimestamp()
+                )
+        );
+
     }
 
 }

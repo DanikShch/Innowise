@@ -16,6 +16,11 @@ spring:
 app:
   jwt:
     secret: ${JWT_SECRET}
+  kafka:
+    create-order-topic: create-order
+    create-payment-topic: create-payment
+    order-group-id: order-service-group
+
 resilience4j:
   circuitbreaker:
     instances:

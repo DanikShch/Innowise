@@ -5,16 +5,19 @@ spring:
   application:
     name: PaymentService
 
-  data:
-    mongodb:
-      uri: mongodb://localhost:27017/payment_db
-
   liquibase:
     enabled: false
     change-log: classpath:db/changelog/db.changelog-master.yaml
 
 external:
   random-api:
-    url: http://www.randomnumberapi.com/api/v1.0/random?min=1&max=100&count=1
+    url: ${RANDOM_API_URL}
+
+app:
+  kafka:
+    create-order-topic: create-order
+    create-payment-topic: create-payment
+    payment-group-id: payment-service-group
+
 
 

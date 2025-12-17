@@ -29,5 +29,12 @@ spring:
           filters:
             - JwtAuthFilter
 
+        - id: payment-service
+          uri: ${DOCKER_PAYMENT_SERVICE_URL}
+          predicates:
+            - Path=/api/v1/payments/**
+          filters:
+            - JwtAuthFilter
+
 server:
   port: ${DOCKER_SERVER_PORT:8085}

@@ -1,0 +1,11 @@
+spring:
+  config:
+    activate:
+      on-profile: local
+
+  kafka:
+    bootstrap-servers: ${LOCAL_KAFKA_BOOTSTRAP_SERVERS}
+
+  data:
+    mongodb:
+      uri: ${LOCAL_MONGO_URI}
