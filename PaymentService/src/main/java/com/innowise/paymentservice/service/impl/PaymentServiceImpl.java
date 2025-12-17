@@ -1,6 +1,6 @@
 package com.innowise.paymentservice.service.impl;
 
-import com.innowise.paymentservice.Repository.PaymentRepository;
+import com.innowise.paymentservice.repository.PaymentRepository;
 import com.innowise.paymentservice.client.RandomNumberClient;
 import com.innowise.paymentservice.dto.PaymentResponseDto;
 import com.innowise.paymentservice.kafka.event.CreateOrderEvent;

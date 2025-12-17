@@ -1,4 +1,4 @@
-package com.innowise.paymentservice.Repository;
+package com.innowise.paymentservice.repository;
 
 import com.innowise.paymentservice.model.Payment;
 import com.innowise.paymentservice.model.PaymentStatus;
