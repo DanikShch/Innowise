@@ -5,6 +5,7 @@ import com.innowise.orderservice.dto.request.OrderItemRequestDto;
 import com.innowise.orderservice.dto.request.OrderRequestDto;
 import com.innowise.orderservice.dto.response.OrderResponseDto;
 import com.innowise.orderservice.dto.response.UserResponseDto;
+import com.innowise.orderservice.kafka.producer.OrderEventProducer;
 import com.innowise.orderservice.model.Item;
 import com.innowise.orderservice.model.OrderStatus;
 import com.innowise.orderservice.repository.ItemRepository;

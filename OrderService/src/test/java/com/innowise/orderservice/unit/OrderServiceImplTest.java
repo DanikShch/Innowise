@@ -6,6 +6,8 @@ import com.innowise.orderservice.dto.request.OrderRequestDto;
 import com.innowise.orderservice.dto.response.OrderResponseDto;
 import com.innowise.orderservice.dto.response.UserResponseDto;
 import com.innowise.orderservice.exception.*;
+import com.innowise.orderservice.kafka.event.CreateOrderEvent;
+import com.innowise.orderservice.kafka.producer.OrderEventProducer;
 import com.innowise.orderservice.mapper.OrderItemMapper;
 import com.innowise.orderservice.mapper.OrderMapper;
 import com.innowise.orderservice.model.*;
@@ -36,6 +38,8 @@ import static org.mockito.Mockito.*;
 @Tag("unit")
 class OrderServiceImplTest {
 
+    @Mock
+    OrderEventProducer orderEventProducer;
     @Mock
     OrderRepository orderRepository;
     @Mock
@@ -91,10 +95,13 @@ class OrderServiceImplTest {
         when(orderRepository.save(mapped)).thenReturn(saved);
         when(orderMapper.toDto(saved)).thenReturn(new OrderResponseDto());
 
+        doNothing().when(orderEventProducer)
+                .sendCreateOrderEvent(any(CreateOrderEvent.class));
         OrderResponseDto result = orderService.createOrder(req);
 
         assertNotNull(result);
         verify(orderRepository).save(mapped);
+        verify(orderEventProducer).sendCreateOrderEvent(any(CreateOrderEvent.class));
     }
 
     @Test
