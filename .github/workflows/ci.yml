@@ -49,16 +49,6 @@ jobs:
         run: mvn -B verify -Dgroups=integration
         working-directory: UserService
 
-      - name: SonarCloud Scan (UserService)
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: |
-          mvn -B verify sonar:sonar \
-            -Dsonar.projectKey=danikshch_userservice \
-            -Dsonar.organization=danikshch \
-            -Dsonar.host.url=https://sonarcloud.io
-        working-directory: UserService
-
       - name: Build OrderService
         run: mvn -B clean package -DskipTests
         working-directory: OrderService
