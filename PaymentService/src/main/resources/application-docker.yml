@@ -1,0 +1,11 @@
+spring:
+  config:
+    activate:
+      on-profile: docker
+
+  kafka:
+    bootstrap-servers: ${DOCKER_KAFKA_BOOTSTRAP_SERVERS}
+
+  data:
+    mongodb:
+      uri: ${DOCKER_MONGO_URI}

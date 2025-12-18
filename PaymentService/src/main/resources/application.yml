@@ -1,0 +1,25 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: PaymentService
+
+  liquibase:
+    enabled: false
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+
+external:
+  random-api:
+    url: ${RANDOM_API_URL}
+
+app:
+  jwt:
+    secret: ${JWT_SECRET}
+  kafka:
+    create-order-topic: create-order
+    create-payment-topic: create-payment
+    payment-group-id: payment-service-group
+
+
+

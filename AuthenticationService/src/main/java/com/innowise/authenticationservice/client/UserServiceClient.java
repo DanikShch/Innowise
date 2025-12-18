@@ -1,10 +1,9 @@
 package com.innowise.authenticationservice.client;
 
+import com.innowise.authenticationservice.dto.response.UserMeResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 
@@ -16,6 +15,9 @@ public interface UserServiceClient {
             @RequestBody UserCreateRequest request,
             @RequestHeader("Authorization") String token
     );
+
+    @GetMapping("/api/v1/users/me")
+    UserMeResponse getCurrentUser(@RequestHeader("Authorization") String token);
 
     record UserCreateRequest(
             String name,

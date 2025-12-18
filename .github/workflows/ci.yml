@@ -1,96 +1,98 @@
-name: CI Pipeline
+name: Microservices CI
 
 on:
   push:
     branches:
-      - main
+      - master
+      - develop
       - feature/**
   pull_request:
     branches:
-      - main
+      - master
       - develop
 
 jobs:
-  user-service:
+  build:
     runs-on: ubuntu-latest
-    env:
-      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           java-version: 21
-          distribution: 'temurin'
+          distribution: temurin
 
-      - name: Cache Maven packages
+      - name: Cache Maven
         uses: actions/cache@v4
         with:
           path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('UserService/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-m2-
+
+      - name: Build AuthenticationService
+        run: mvn -B clean package -DskipTests
+        working-directory: AuthenticationService
 
       - name: Build UserService
-        run: mvn -B -f UserService/pom.xml clean install -DskipTests
+        run: mvn -B clean package -DskipTests
+        working-directory: UserService
 
       - name: Unit Tests UserService
-        run: mvn -B -f UserService/pom.xml clean test -Dgroups=unit -Pcoverage
+        run: mvn -B test -Dgroups=unit -Pcoverage
+        working-directory: UserService
 
       - name: Integration Tests UserService
-        run: mvn -B -f UserService/pom.xml verify -Dgroups=integration
-
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Build & Push UserService Docker
-        run: |
-          docker build -t danikshch/userservice:latest UserService
-          docker push danikshch/userservice:latest
-
-  order-service:
-    runs-on: ubuntu-latest
-    env:
-      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
-        with:
-          java-version: 21
-          distribution: 'temurin'
-
-      - name: Cache Maven packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('OrderService/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2
+        run: mvn -B verify -Dgroups=integration
+        working-directory: UserService
 
       - name: Build OrderService
-        run: mvn -B -f OrderService/pom.xml clean install -DskipTests
+        run: mvn -B clean package -DskipTests
+        working-directory: OrderService
 
       - name: Unit Tests OrderService
-        run: mvn -B -f OrderService/pom.xml clean test -Dgroups=unit
+        run: mvn -B test -Dgroups=unit
+        working-directory: OrderService
 
       - name: Integration Tests OrderService
-        run: mvn -B -f OrderService/pom.xml verify -Dgroups=integration
+        run: mvn -B verify -Dgroups=integration
+        working-directory: OrderService
+
+      - name: Build PaymentService
+        run: mvn -B clean package -DskipTests
+        working-directory: PaymentService
+
+      - name: Unit Tests PaymentService
+        run: mvn -B test -Dgroups=unit
+        working-directory: PaymentService
+
+
+      - name: Build API Gateway
+        run: mvn -B clean package -DskipTests
+        working-directory: APIGateway
+
 
       - name: Log in to Docker Hub
-        uses: docker/login-action@v2
+        if: github.ref == 'refs/heads/master'
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build & Push OrderService Docker
+      - name: Build & Push Docker Images
+        if: github.ref == 'refs/heads/master'
         run: |
-          docker build -t danikshch/orderservice:latest OrderService
-          docker push danikshch/orderservice:latest
+          docker build -t danikshch/microservices:auth-service AuthenticationService
+          docker build -t danikshch/microservices:user-service UserService
+          docker build -t danikshch/microservices:order-service OrderService
+          docker build -t danikshch/microservices:payment-service PaymentService
+          docker build -t danikshch/microservices:api-gateway APIGateway
+
+          docker push danikshch/microservices:auth-service
+          docker push danikshch/microservices:user-service
+          docker push danikshch/microservices:order-service
+          docker push danikshch/microservices:payment-service
+          docker push danikshch/microservices:api-gateway

@@ -1,0 +1,104 @@
+package com.innowise.paymentservice.service.impl;
+
+import com.innowise.paymentservice.repository.PaymentRepository;
+import com.innowise.paymentservice.client.RandomNumberClient;
+import com.innowise.paymentservice.dto.PaymentResponseDto;
+import com.innowise.paymentservice.kafka.event.CreateOrderEvent;
+import com.innowise.paymentservice.kafka.event.CreatePaymentEvent;
+import com.innowise.paymentservice.kafka.produser.PaymentEventProducer;
+import com.innowise.paymentservice.mapper.PaymentMapper;
+import com.innowise.paymentservice.model.Payment;
+import com.innowise.paymentservice.model.PaymentStatus;
+import com.innowise.paymentservice.service.PaymentService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.List;
+
+@RequiredArgsConstructor
+@Service
+public class PaymentServiceImpl implements PaymentService {
+
+    private final PaymentRepository paymentRepository;
+    private final PaymentMapper paymentMapper;
+    private final RandomNumberClient randomNumberClient;
+    private final PaymentEventProducer paymentEventProducer;
+
+    @Override
+    public List<PaymentResponseDto> getPaymentsByOrderId(Long orderId) {
+        List<Payment> payments = paymentRepository.findByOrderId(orderId);
+        return payments.stream().map(paymentMapper::toDto).toList();
+    }
+
+    @Override
+    public List<PaymentResponseDto> getPaymentsByUserId(Long userId) {
+        List<Payment> payments = paymentRepository.findByUserId(userId);
+        return payments.stream().map(paymentMapper::toDto).toList();
+    }
+
+    @Override
+    public List<PaymentResponseDto> getPaymentsByStatus(PaymentStatus status) {
+        List<Payment> payments = paymentRepository.findByStatus(status);
+        return payments.stream().map(paymentMapper::toDto).toList();
+    }
+
+    @Override
+    public BigDecimal getTotalSum(Instant from, Instant to) {
+        List<Payment> payments = paymentRepository.findByTimestampBetween(from, to);
+        return payments.stream().filter(payment -> payment.getStatus().equals(PaymentStatus.SUCCESS))
+                .map(Payment::getPaymentAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    @Override
+    public void processOrderPayment(CreateOrderEvent event) {
+
+        Payment payment = Payment.builder()
+                .orderId(event.getOrderId())
+                .userId(event.getUserId())
+                .paymentAmount(event.getTotalPrice())
+                .timestamp(Instant.now())
+                .build();
+
+        int randomNumber = randomNumberClient.getRandomNumber();
+
+        if (randomNumber % 2 == 0) {
+            payment.setStatus(PaymentStatus.SUCCESS);
+        } else {
+            payment.setStatus(PaymentStatus.FAILED);
+        }
+
+        Payment savedPayment = paymentRepository.save(payment);
+
+        paymentEventProducer.send(
+                new CreatePaymentEvent(
+                        savedPayment.getOrderId(),
+                        savedPayment.getUserId(),
+                        savedPayment.getPaymentAmount(),
+                        savedPayment.getStatus().name(),
+                        savedPayment.getTimestamp()
+                )
+        );
+
+    }
+
+    @Override
+    public List<PaymentResponseDto> getMyPayments() {
+
+        var authentication = SecurityContextHolder
+                .getContext()
+                .getAuthentication();
+
+        if (authentication == null || authentication.getCredentials() == null) {
+            throw new RuntimeException("Unauthenticated");
+        }
+        Long userId = (Long) authentication.getCredentials();
+
+        return paymentRepository.findByUserId(userId)
+                .stream()
+                .map(paymentMapper::toDto)
+                .toList();
+    }
+}

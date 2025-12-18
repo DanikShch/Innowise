@@ -37,10 +37,21 @@ public class AuthenticationService {
             throw new BadCredentialsException("Invalid username or password");
         }
 
-        String accessToken = jwtTokenProvider.generateAccessToken(user.getUsername(), user.getRole());
+        String tempToken = jwtTokenProvider.generateSystemToken(
+                user.getUsername(),
+                user.getRole()
+        );
+        Long userId = userServiceClient
+                .getCurrentUser("Bearer " + tempToken)
+                .getId();
+
+        String accessToken = jwtTokenProvider.generateAccessToken(
+                user.getUsername(),
+                user.getRole(),
+                userId
+        );
         String refreshToken = jwtTokenProvider.generateRefreshToken(user.getUsername());
 
-        log.info("User {} successfully logged in", user.getUsername());
         return AuthResponse.of(accessToken, refreshToken);
     }
 
@@ -57,27 +68,28 @@ public class AuthenticationService {
                 .build();
 
         userCredentialsRepository.save(user);
-        log.debug("User credentials saved (transactional): {}", request.getUsername());
 
         try {
-            String token = jwtTokenProvider.generateAccessToken(
+            String systemToken = jwtTokenProvider.generateSystemToken(
                     request.getUsername(),
                     Role.USER
             );
-            log.debug("Generated JWT token for: {}", request.getUsername());
+
             userServiceClient.createUser(
                     new UserServiceClient.UserCreateRequest(
                             request.getName(),
                             request.getSurname(),
                             request.getBirthDate()
                     ),
-                    "Bearer " + token
+                    "Bearer " + systemToken
             );
 
             log.info("Registration completed successfully for: {}", request.getUsername());
         } catch (Exception e) {
             log.error("Registration failed for: {}", request.getUsername(), e);
-            throw new RegistrationFailedException("Failed to create user profile: " + e.getMessage(), e);
+            throw new RegistrationFailedException(
+                    "Failed to create user profile: " + e.getMessage(), e
+            );
         }
     }
 
@@ -91,28 +103,40 @@ public class AuthenticationService {
         UserCredentials user = userCredentialsRepository.findByUsername(username)
                 .orElseThrow(() -> new BadCredentialsException("User not found"));
 
-        String newAccessToken = jwtTokenProvider.generateAccessToken(user.getUsername(), user.getRole());
-        String newRefreshToken = jwtTokenProvider.generateRefreshToken(user.getUsername());
+        String tempToken = jwtTokenProvider.generateSystemToken(
+                username,
+                user.getRole()
+        );
 
-        log.info("Token refreshed for user {}", user.getUsername());
+        Long userId = userServiceClient
+                .getCurrentUser("Bearer " + tempToken)
+                .getId();
+
+        String newAccessToken = jwtTokenProvider.generateAccessToken(
+                username,
+                user.getRole(),
+                userId
+        );
+
+        String newRefreshToken = jwtTokenProvider.generateRefreshToken(username);
+
         return AuthResponse.of(newAccessToken, newRefreshToken);
-    }
-
-    public UserInfoResponse getUserInfo(String token) {
-        if (!validateToken(token)) {
-            throw new BadCredentialsException("Invalid token");
-        }
-
-        String username = jwtTokenProvider.getUsernameFromToken(token);
-        Role role = jwtTokenProvider.getRoleFromToken(token);
-
-        return UserInfoResponse.builder()
-                .username(username)
-                .role(role)
-                .build();
     }
 
     public boolean validateToken(String token) {
         return jwtTokenProvider.validateToken(token);
     }
+
+    public UserInfoResponse getUserInfo(String token) {
+        if (!jwtTokenProvider.validateToken(token)) {
+            throw new BadCredentialsException("Invalid token");
+        }
+
+        return UserInfoResponse.builder()
+                .username(jwtTokenProvider.getUsernameFromToken(token))
+                .role(jwtTokenProvider.getRoleFromToken(token))
+                .build();
+    }
+
+
 }
