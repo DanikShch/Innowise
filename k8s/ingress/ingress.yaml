@@ -5,8 +5,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-    - host: innowise.local
-      http:
+    -  http:
         paths:
           - path: /
             pathType: Prefix
