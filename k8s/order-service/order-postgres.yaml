@@ -1,16 +1,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: auth-postgres
+  name: order-postgres
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: auth-postgres
+      app: order-postgres
   template:
     metadata:
       labels:
-        app: auth-postgres
+        app: order-postgres
     spec:
       containers:
         - name: postgres
@@ -21,17 +21,17 @@ spec:
             - name: POSTGRES_DB
               valueFrom:
                 configMapKeyRef:
-                  name: auth-config
+                  name: order-config
                   key: POSTGRES_DB
             - name: POSTGRES_USER
               valueFrom:
                 configMapKeyRef:
-                  name: auth-config
+                  name: order-config
                   key: DOCKER_POSTGRES_USER
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: auth-secret
+                  name: order-secret
                   key: DOCKER_POSTGRES_PASSWORD
           volumeMounts:
             - name: postgres-data
@@ -52,6 +52,7 @@ spec:
             periodSeconds: 10
             timeoutSeconds: 5
             failureThreshold: 5
+
           readinessProbe:
             exec:
               command: ["pg_isready", "-U", "postgres"]
@@ -62,15 +63,15 @@ spec:
       volumes:
         - name: postgres-data
           persistentVolumeClaim:
-            claimName: auth-postgres-pvc
+            claimName: order-postgres-pvc
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: auth-postgres
+  name: order-postgres
 spec:
   selector:
-    app: auth-postgres
+    app: order-postgres
   ports:
     - port: 5432
       targetPort: 5432

@@ -1,16 +1,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: user-redis
+  name: order-redis
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: user-redis
+      app: order-redis
   template:
     metadata:
       labels:
-        app: user-redis
+        app: order-redis
     spec:
       containers:
         - name: redis
@@ -45,10 +45,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: user-redis
+  name: order-redis
 spec:
   selector:
-    app: user-redis
+    app: order-redis
   ports:
     - port: 6379
       targetPort: 6379

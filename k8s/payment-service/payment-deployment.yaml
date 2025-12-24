@@ -1,28 +1,30 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: user-service
+  name: payment-service
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: user-service
+      app: payment-service
   template:
     metadata:
       labels:
-        app: user-service
+        app: payment-service
     spec:
       containers:
-        - name: user-service
-          image: user-service:latest
+        - name: payment-service
+          image: payment-service:latest
           imagePullPolicy: IfNotPresent
+
           ports:
-            - containerPort: 8080
+            - containerPort: 8084
+
           envFrom:
             - configMapRef:
-                name: user-config
+                name: payment-config
             - secretRef:
-                name: user-secret
+                name: payment-secret
 
           resources:
             requests:
@@ -39,24 +41,26 @@ spec:
           startupProbe:
             httpGet:
               path: /actuator/health
-              port: 8080
-            failureThreshold: 30
+              port: 8084
+            initialDelaySeconds: 30
             periodSeconds: 10
-
-          livenessProbe:
-            httpGet:
-              path: /actuator/health
-              port: 8080
-            initialDelaySeconds: 120
-            periodSeconds: 20
             timeoutSeconds: 5
-            failureThreshold: 5
+            failureThreshold: 30
 
           readinessProbe:
             httpGet:
               path: /actuator/health
-              port: 8080
+              port: 8084
             initialDelaySeconds: 30
             periodSeconds: 10
             timeoutSeconds: 5
             failureThreshold: 3
+
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8084
+            initialDelaySeconds: 120
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 5
