@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: user-config
+data:
+  SPRING_PROFILES_ACTIVE: "docker"
+
+  POSTGRES_DB: "user_service_db"
+  DOCKER_POSTGRES_URL: "jdbc:postgresql://user-postgres:5432/user_service_db"
+  DOCKER_POSTGRES_USER: "postgres"
+
+  DOCKER_REDIS_HOST: "user-redis"
+  DOCKER_REDIS_PORT: "6379"
+
+  DOCKER_AUTH_SERVICE_URL: "http://auth-service:8081"

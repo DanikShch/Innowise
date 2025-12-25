@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: order-config
+data:
+  SPRING_PROFILES_ACTIVE: "docker"
+
+  POSTGRES_DB: "order_service_db"
+  DOCKER_POSTGRES_URL: "jdbc:postgresql://order-postgres:5432/order_service_db"
+  DOCKER_POSTGRES_USER: "postgres"
+
+  DOCKER_REDIS_HOST: "order-redis"
+  DOCKER_REDIS_PORT: "6379"
+
+  DOCKER_USER_SERVICE_URL: "http://user-service:8080"
+  DOCKER_KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
