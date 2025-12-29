@@ -18,3 +18,12 @@ spring:
 app:
   auth-service:
     url: ${DOCKER_AUTH_SERVICE_URL}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always

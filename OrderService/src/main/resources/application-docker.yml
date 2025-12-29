@@ -18,3 +18,12 @@ server:
 app:
   user-service:
     url: ${DOCKER_USER_SERVICE_URL}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always

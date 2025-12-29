@@ -16,3 +16,12 @@ server:
 
 gateway:
   url: ${DOCKER_API_GATEWAY_URL}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always
